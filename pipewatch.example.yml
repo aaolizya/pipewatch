@@ -1,0 +1,43 @@
+# pipewatch example configuration
+# Copy to pipewatch.yml and adjust to your environment.
+
+# How often (in seconds) to poll sources for health metrics
+poll_interval: 60
+
+sources:
+  - name: orders_postgres
+    type: postgres
+    connection:
+      host: localhost
+      port: 5432
+      database: orders
+      user: monitor
+      password: "${ORDERS_DB_PASSWORD}"  # supports env var substitution
+    thresholds:
+      row_count_min: 500          # alert if fewer rows than expected
+      freshness_max_seconds: 300  # alert if newest row is older than 5 min
+
+  - name: events_kafka
+    type: kafka
+    connection:
+      bootstrap_servers: kafka.internal:9092
+      topic: user-events
+    thresholds:
+      consumer_lag_max: 10000     # alert if consumer group lag exceeds this
+
+  - name: dbt_artifacts
+    type: dbt
+    connection:
+      project_dir: /srv/dbt/project
+      profiles_dir: /srv/dbt/profiles
+    thresholds:
+      test_failures_max: 0        # alert on any dbt test failure
+
+alert_channels:
+  - type: slack
+    webhook: "${SLACK_WEBHOOK_URL}"
+    mention: "@data-oncall"
+
+  - type: pagerduty
+    integration_key: "${PAGERDUTY_KEY}"
+    severity: critical
