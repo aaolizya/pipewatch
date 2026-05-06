@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Dict, Iterator, Optional, Tuple
 
 
 @dataclass
@@ -58,6 +58,22 @@ class AlertDeduplicator:
     def last_entry(self, source: str, metric_name: str) -> Optional[DedupeEntry]:
         """Return the stored entry for a metric, or None."""
         return self._seen.get((source, metric_name))
+
+    def entries_for_source(self, source: str) -> Iterator[DedupeEntry]:
+        """Yield all tracked entries belonging to the given source."""
+        for entry in self._seen.values():
+            if entry.source == source:
+                yield entry
+
+    def reset_source(self, source: str) -> int:
+        """Clear all deduplication state for every metric under *source*.
+
+        Returns the number of entries removed.
+        """
+        keys_to_remove = [key for key, entry in self._seen.items() if entry.source == source]
+        for key in keys_to_remove:
+            del self._seen[key]
+        return len(keys_to_remove)
 
     def __len__(self) -> int:
         return len(self._seen)
