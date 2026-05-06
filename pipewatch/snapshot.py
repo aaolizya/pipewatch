@@ -58,7 +58,20 @@ def save_snapshot(snapshot: Snapshot, path: str) -> None:
 
 
 def load_snapshot(path: str) -> Snapshot:
-    """Load a previously saved snapshot from disk."""
+    """Load a previously saved snapshot from disk.
+
+    Raises:
+        FileNotFoundError: If the file at *path* does not exist.
+        ValueError: If the file contents cannot be parsed as a valid Snapshot.
+    """
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Snapshot file not found: {path}")
     with open(path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
-    return Snapshot(**data)
+        try:
+            data = json.load(fh)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Invalid JSON in snapshot file '{path}': {exc}") from exc
+    try:
+        return Snapshot(**data)
+    except TypeError as exc:
+        raise ValueError(f"Snapshot data in '{path}' has unexpected fields: {exc}") from exc
