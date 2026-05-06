@@ -94,6 +94,21 @@ def test_corrupted_file_returns_empty(tmp_path: Path) -> None:
     history_dir.mkdir()
     bad_file = history_dir / "db_primary__query_latency_ms.json"
     bad_file.write_text("not valid json {{")
-    h = MetricHistory(history_dir=history_dir, max_entries=10)
-    entries = h.get("db_primary", "query_latency_ms")
+
+    history = MetricHistory(history_dir=history_dir, max_entries=10)
+    entries = history.get("db_primary", "query_latency_ms")
     assert entries == []
+
+
+def test_record_creates_history_dir_if_missing(tmp_path: Path, sample_metric: Metric) -> None:
+    """Ensure MetricHistory creates the history directory on first record if it does not exist."""
+    history_dir = tmp_path / "nested" / "history"
+    assert not history_dir.exists()
+
+    history = MetricHistory(history_dir=history_dir, max_entries=10)
+    history.record(sample_metric)
+
+    assert history_dir.exists()
+    entries = history.get("db_primary", "query_latency_ms")
+    assert len(entries) == 1
+    assert entries[0].value == 42.5
