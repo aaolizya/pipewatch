@@ -65,6 +65,13 @@ def test_evaluate_metric_exact_warning_boundary(sample_metric):
     assert result.level == "warning"
 
 
+def test_evaluate_metric_exact_critical_boundary(sample_metric):
+    """Value equal to critical threshold should trigger critical."""
+    result = evaluate_metric(sample_metric, threshold_warning=30.0, threshold_critical=42.0)
+    assert result.level == "critical"
+    assert result.is_alert
+
+
 def test_alert_result_repr(sample_metric):
     result = evaluate_metric(sample_metric, threshold_warning=40.0)
     text = repr(result)
