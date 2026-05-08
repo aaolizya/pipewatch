@@ -73,3 +73,19 @@ def filter_alerts_above_value(
         Filtered list preserving original order.
     """
     return [r for r in results if r.metric.value > threshold]
+
+
+def filter_alerts_below_value(
+    results: Iterable[AlertResult],
+    threshold: float,
+) -> List[AlertResult]:
+    """Return alert results whose metric value is below *threshold*.
+
+    Args:
+        results:   Iterable of :class:`~pipewatch.metrics.AlertResult` objects.
+        threshold: Numeric upper bound (exclusive).
+
+    Returns:
+        Filtered list preserving original order.
+    """
+    return [r for r in results if r.metric.value < threshold]
